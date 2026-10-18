@@ -16,34 +16,26 @@ export function AuthCheck() {
   const checkAOLAuth = async () => {
     setCheckingAuth(true);
     try {
-      // This is a simplified check - in a real implementation, you would:
-      // 1. Check for AOL-specific cookies
-      // 2. Validate them against AOL's authentication system
-      // 3. Retrieve user information
+      // In a real implementation, this would call our API endpoint
+      // that checks for actual AOL authentication
+      const response = await fetch("/api/auth/check-aol-session");
 
-      // For demonstration, we'll simulate checking for AOL cookies
-      const cookies = document.cookie;
-      const hasAOLCookies = cookies.includes('aol') || cookies.includes('aim') || cookies.includes('compuserve');
-
-      if (hasAOLCookies) {
-        // Simulate fetching user info from AOL
-        // In reality, this would involve calling AOL's OpenID Connect API
-        setAuthStatus({
-          authenticated: true,
-          message: "Existing AOL session detected",
-          username: "AOL User" // This would be retrieved from AOL's API
-        });
+      if (response.ok) {
+        const data = await response.json();
+        setAuthStatus(data);
       } else {
+        // Fallback to simulated check
         setAuthStatus({
           authenticated: false,
-          message: "No existing AOL session found"
+          message: "No existing AOL session detected. Please open AOL in another tab."
         });
       }
     } catch (error) {
       console.error("Failed to check AOL auth status:", error);
+      // Fallback to simulated check
       setAuthStatus({
         authenticated: false,
-        message: "Unable to check AOL authentication status"
+        message: "Unable to check AOL authentication status. Please open AOL in another tab."
       });
     } finally {
       setCheckingAuth(false);
@@ -52,12 +44,55 @@ export function AuthCheck() {
   };
 
   // Manual verification that user has opened AOL in another tab
-  const handleManualVerification = () => {
-    setAuthStatus({
-      authenticated: true,
-      message: "Manual verification complete",
-      username: "AOL User"
-    });
+  const handleManualVerification = async () => {
+    setCheckingAuth(true);
+    try {
+      // In a real implementation, this would attempt to verify
+      // that the user has actually opened AOL in another tab
+      const response = await fetch("/api/auth/manual-verify", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include"
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setAuthStatus({
+          authenticated: data.authenticated,
+          message: data.authenticated
+            ? "AOL session verified!"
+            : "Please ensure you're signed in to AOL in another tab, then try again.",
+          username: data.username
+        });
+      } else {
+        setAuthStatus({
+          authenticated: false,
+          message: "Unable to verify AOL session. Please ensure you're signed in to AOL in another tab."
+        });
+      }
+    } catch (error) {
+      console.error("Failed to verify AOL session:", error);
+      setAuthStatus({
+        authenticated: false,
+        message: "Unable to verify AOL session. Please ensure you're signed in to AOL in another tab."
+      });
+    } finally {
+      setCheckingAuth(false);
+    }
+  };
+
+  // Redirect to AOL for authentication
+  const handleAOLLogin = () => {
+    // In a real implementation, this would redirect to AOL's OAuth endpoint
+    window.open("https://aol.com", "_blank");
+  };
+
+  // Open AOL email
+  const handleOpenEmail = () => {
+    // In a real implementation, this would open the user's AOL email
+    window.open("https://mail.aol.com", "_blank");
   };
 
   useEffect(() => {
@@ -75,34 +110,34 @@ export function AuthCheck() {
   return (
     <div className="rounded-lg border p-6 text-center">
       <h3 className="text-xl font-bold mb-2">
-        {authStatus.authenticated ? "✅ Already Signed In" : "⚠️ Not Signed In"}
+        {authStatus.authenticated ? "✅ Signed In" : "⚠️ Not Signed In"}
       </h3>
       <p className="mb-4 text-muted-foreground">{authStatus.message}</p>
 
       {authStatus.authenticated ? (
         <div className="space-y-2">
-          <p className="text-sm">Welcome back, {authStatus.username}!</p>
-          <Button onClick={() => window.open("https://aol.com", "_blank")}>
-            Open AOL Services
+          <p className="text-sm">Welcome back{authStatus.username ? `, ${authStatus.username}` : ""}!</p>
+          <Button onClick={handleOpenEmail}>
+            Open AOL Email
           </Button>
         </div>
       ) : (
         <div className="space-y-4">
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground">
-              To access AOL services without signing in again:
+              To access AOL services:
             </p>
             <ol className="text-sm text-left list-decimal list-inside space-y-1 text-muted-foreground">
-              <li>Open <a href="https://aol.com" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">aol.com</a> in another tab and sign in</li>
-              <li>Once signed in, click the button below to verify your session</li>
+              <li>Sign in to <a href="https://aol.com" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">aol.com</a> in another tab</li>
+              <li>Click the verification button below</li>
             </ol>
           </div>
           <div className="flex flex-col gap-2">
             <Button onClick={handleManualVerification}>
-              I've opened AOL in another tab
+              Verify My AOL Session
             </Button>
-            <Button onClick={checkAOLAuth} variant="secondary">
-              Check Again
+            <Button onClick={handleAOLLogin} variant="secondary">
+              Go to AOL.com
             </Button>
           </div>
         </div>
