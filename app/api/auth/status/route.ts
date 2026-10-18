@@ -6,14 +6,28 @@ export async function GET(request: Request) {
   const headers = request.headers
   const cookieHeader = headers.get('cookie') || ''
 
-  // This is a placeholder - in reality, you'd check for AOL-specific auth cookies
-  // For demonstration, we're just checking if any cookies exist
-  const isAuthenticated = cookieHeader.length > 0
+  // Check for AOL-specific cookies (this is a simplified example)
+  // In reality, you'd check for specific AOL authentication cookies
+  const aolCookies = [
+    'aol',
+    'aim',
+    'compuserve',
+    'netscape'
+  ];
+
+  const hasAOLCookies = aolCookies.some(cookie =>
+    cookieHeader.toLowerCase().includes(cookie)
+  );
+
+  // This would be replaced with actual AOL API validation in a real implementation
+  const isAuthenticated = hasAOLCookies;
 
   return NextResponse.json({
     authenticated: isAuthenticated,
     message: isAuthenticated
       ? "Existing AOL session detected"
-      : "No existing AOL session found"
+      : "No existing AOL session found",
+    // In a real implementation, you would also return user information
+    // username: isAuthenticated ? "AOL User" : undefined
   })
 }
